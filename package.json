@@ -1,0 +1,22 @@
+{
+  "private": true,
+  "name": "fable.elmish.starter",
+  "scripts": {
+    "start": "fable watch ./ --run parcel index.html",
+    "build": "fable ./ --run parcel build index.html"
+  },
+  "dependencies": {
+    "@react-three/drei": "^9.48.6",
+    "@react-three/fiber": "^8.9.2",
+    "@types/three": "^0.147.1",
+    "buffer": "^6.0.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "three": "^0.148.0"
+  },
+  "devDependencies": {
+    "bulma": "^0.9.4",
+    "parcel": "^2.8.2",
+    "process": "^0.11.10"
+  }
+}
