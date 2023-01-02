@@ -5,7 +5,6 @@ open Elmish
 open Elmish.UrlParser
 
 open Feliz
-open Extensions
 open Fable.Core
 open Fable.Core.JsInterop
 open Fable.React
@@ -53,8 +52,20 @@ let update (msg: Msg) (state: State) =
 
 
 
+(*
+    <Float
+  speed={1} // Animation speed, defaults to 1
+  rotationIntensity={1} // XYZ rotation intensity, defaults to 1
+  floatIntensity={1} // Up/down float intensity, works like a multiplier with floatingRange,defaults to 1
+  floatingRange={[1, 10]} // Range of y-axis values the object will float within, defaults to [-0.1,0.1]>
+  <mesh />
+</Float>
 
-
+*)
+[<Erase>]
+type IFloatProperty =
+    interface
+    end
 
 [<Erase>]
 type ICanvasProperty =
@@ -125,6 +136,13 @@ type IGridHelperProperty  =
 type IPlaneGeometryProperty  =
     interface 
     end
+
+[<Erase>]
+type ISparklesProperty  =
+    interface 
+    end
+
+
 [<Erase; RequireQualifiedAccess>]
 module Interop =
     let inline mkCanvasAttr (key: string) (value: obj) : ICanvasProperty = unbox (key, value)
@@ -143,6 +161,9 @@ module Interop =
     let inline mkGridHelperAttr (key: string) (value: obj) : IGridHelperProperty = unbox (key, value)
     let inline mkPlaneGeometry  (key: string) (value: obj) : IPlaneGeometryProperty = unbox (key, value)
 
+    let inline mkSparklesProperty (key: string) (value: obj) : ISparklesProperty = unbox (key, value)
+
+    let inline mkFloatProperty (key: string) (value: obj) : IFloatProperty = unbox (key, value)
 
     let inline reactElementWithChildren (name: string) (children: #seq<ReactElement>) =
         let reactApi: IReactApi = importDefault "react"
@@ -196,7 +217,7 @@ type axesHelper =
 type environment =
     static member inline preset(value: string) = Interop.mkEnvironmentAttr "preset" value
     static member inline files(value: string) = Interop.mkEnvironmentAttr "files" value
-    static member inline background = Interop.mkEnvironmentAttr "background" () 
+    static member inline background(value:bool) = Interop.mkEnvironmentAttr "background" () 
     static member inline blur(value: float) = Interop.mkEnvironmentAttr "blur" value
 
 [<Erase>]
@@ -227,6 +248,39 @@ type roundedBox =
     static member inline radius(value: float) = Interop.mkRoundedBoxAttr "radius" value
 
 
+[<Erase>]
+type sparkles =
+    static member inline count(value: int) = Interop.mkSparklesProperty "count" value
+    static member inline scale(value: float) = Interop.mkSparklesProperty "scale" value
+    static member inline size(value: float) = Interop.mkSparklesProperty "size" value
+    static member inline speed(value: float) = Interop.mkSparklesProperty "speed" value
+    static member inline color(value: string) = Interop.mkSparklesProperty "color" value
+    static member inline opacity(value: float) = Interop.mkSparklesProperty "opacity" value
+
+
+[<Erase>]
+type float =
+    static member inline speed(value: float) = Interop.mkSparklesProperty "speed" value
+    static member inline rotationIntensity(value: float) = Interop.mkSparklesProperty "rotationIntensity" value
+    static member inline floatIntensity(value: float) = Interop.mkSparklesProperty "floatIntensity" value
+    static member inline floatingRange(value: float) = Interop.mkSparklesProperty "floatingRange" value
+    
+    
+    static member inline color(value: string) = Interop.mkSparklesProperty "color" value
+    static member inline opacity(value: float) = Interop.mkSparklesProperty "opacity" value
+
+
+        (*
+    <Float
+  speed={1} // Animation speed, defaults to 1
+  rotationIntensity={1} // XYZ rotation intensity, defaults to 1
+  floatIntensity={1} // Up/down float intensity, works like a multiplier with floatingRange,defaults to 1
+  floatingRange={[1, 10]} // Range of y-axis values the object will float within, defaults to [-0.1,0.1]>
+  <mesh />
+</Float>
+
+*)
+
 
 let reactElement (name: string) (props: 'a) : ReactElement = import "createElement" "react"
 let reactApi: IReactApi = importDefault "react"
@@ -251,6 +305,8 @@ type Three  =
     static member inline stats(properties: IStatsProperty list) = Interop.reactApi.createElement (import "Stats" "@react-three/drei", createObj !!properties)
 
     static member inline environment(properties: IEnvironmentProperty list) = Interop.reactApi.createElement (import "Environment" "@react-three/drei", createObj !!properties)
+
+    static member inline sparkles(properties: ISparklesProperty list) = Interop.reactApi.createElement (import "Sparkles" "@react-three/drei", createObj !!properties)
 
 
     static member inline mesh children = 
@@ -305,8 +361,8 @@ let render (state: State) (dispatch: Msg -> unit) =
                         Three.environment [
                             //environment.preset "forest"
                             environment.files "https://cdn.jsdelivr.net/gh/Sean-Bradley/React-Three-Fiber-Boilerplate@environment/public/img/venice_sunset_1k.hdr"
-                            //environment.background
-                            //environment.blur 0.5
+                            environment.background true
+                            environment.blur 0.5
                         ]
                         Three.pointLight [
                             pointLight.position (5,3,3)
@@ -318,23 +374,32 @@ let render (state: State) (dispatch: Msg -> unit) =
                         Three.stats [
                             stats.showPanel 1
                         ]
-                        
+                        //
+
+//<Sparkles count={amount} scale={size * 2} size={6} speed={0.4} />
                         Three.mesh [
-                                mesh.receiveShadow true         
+                                //mesh.receiveShadow true         
                                 //Three.sphereGeometry []
                                 (*Three.boxGeometry [
                                     boxGeometry.args (14,10,10)
                                 ]*)
                                 //<planeBufferGeometry args={[10, 10, 1, 1]} />       
                                 mesh.children [
-                                    Three.planeGeometry [
+                                    Three.sparkles [
+                                        sparkles.count 20
+                                        sparkles.scale 2
+                                        sparkles.size 6
+                                        sparkles.speed 0.4
+                                        sparkles.color "orange"
+                                    ]
+                                    (*Three.planeGeometry [
                                         planeGeometry.args (10,10,1,1) 
                                     ]
                                     
                                     Three.torusGeometry [
                                         torusGeometry.args (1,0.5, 30, 94000)
                                     ]
-                                    
+                                    *)
                                 
                                     (*
                                     Three.roundedBox [
